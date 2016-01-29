@@ -131,3 +131,86 @@ test.setName('Another', 'test');
 console.log(test.fullName());
 
 //=> First Name
+
+// State Machine 
+
+class VendingMachine {
+  constructor() {
+    this.state = 'IDLE';
+    this.pocket = [];
+    this.items = [
+    	{name: 'item1', price: 10},
+      {name: 'item2', price: 11},
+      {name: 'item3', price: 12}
+    ];
+  }
+
+  insertCoin(coin) {
+    if (this.state === 'BROKEN') {
+      return console.error('Machine broken');
+    }
+
+    this.pocket.push(coin);
+    this.dispatch();
+  }
+
+  dispatch() {
+    if (this.state !== 'IDLE') {
+      return;
+    }
+
+    this.cents = this.pocket.shift();
+    this.state = 'WAIT_FOR_SELECT';
+    console.log('You have ' + this.cents + ' cents to spend.');
+  }
+
+  break(err) {
+   console.error(err.message);
+   this.state = 'BROKEN';
+  }
+
+  select(item) {
+  	var selectedItem = item;
+    if (this.state === 'IDLE') {
+      return console.error('Please insert coin');
+    }
+
+    if (this.state !== 'WAIT_FOR_SELECT') {
+      return console.error('Processing existing order');
+    }
+    
+    for (var i = 0; i< this.items.length; i++) {
+    	var currentItem = this.items[i];
+      if(currentItem.name === selectedItem) {
+      		if (currentItem.price >= this.cents) {
+          	console.log('You can afford it.');
+          } else {
+          	console.log('Not enough money. Need more coins.');
+          }
+      	// var index = this.items.indexOf(selectedItem);
+      	// this.items.splice(index, 1);
+        
+      } else {
+      	console.error('No item found');
+      }
+    }
+    
+    let change = this.cents - 1;
+    this.itemDespenser.despense(item, err => {
+      if (err) {
+        console.error('Error dispensing item');
+        change += 1;
+        return;
+      }
+
+      this.change.return(change, err => {
+        if (err) {
+          this.break(err);
+          return;
+        }
+        this.state = 'IDLE';
+        this.dispatch();
+      });
+    });
+  }
+}
